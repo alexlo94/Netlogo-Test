@@ -32,6 +32,8 @@ ticks
 
 (a general understanding of what the model is trying to show or explain)
 
+#Modification
+
 ## HOW IT WORKS
 
 (what rules the agents use to create the overall behavior of the model)
