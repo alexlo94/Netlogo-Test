@@ -1,4 +1,5 @@
 ;Some comments here
+ask turtle
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -26,6 +27,23 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
+
+BUTTON
+68
+106
+131
+139
+NIL
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
