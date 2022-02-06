@@ -1,46 +1,136 @@
-;Some comments here
-patches-own [
-  node
+breed [birds bird]
+
+birds-own [
+  id          ;;each bird has a unique id
+  age         ;;die at 4
+  mated?      ;; True or False
+  health_data
+  gene_type ;;Aa AA aa
 ]
 
-turtles-own [
-  id_num    ;; unique id number
-  value     ;; node_value
-  parent    ;; the id number of its parent, -1 if nobody
-  child  ;; the id number of its child, -1 if nobody
+globals [
+  unmated-list
+  unmated-list-bird
+  counter ;;the overall population
+  unmated_count
+  gene_type1
+  gene_type2
+  gene_type3
 ]
-
-to setup
+;;;
+;;; SETUP PROCEDURES
+;;;
+to Setup
   clear-all
-  set-default-shape turtles "circle"
-  let s ["circle" "bug"]
-  ;;set up each level
-  let current_level 1
-  let level_num_node 1
-  let id_id 1
-  while [current_level <= Level]
-  [
-    print current_level
-    print level_num_node
-    let counter_now 1
-    while [counter_now <= level_num_node]
-    [
-      create-turtles 1
-      [
-        setxy  2 * counter_now - 10
-               (-3 * current_level + 10)
-        set size -0.8 * Level + 5        ;; easier to see
-        set color blue     ;; red = not carrying food
-        set id_num id_id
-        if counter_now = 1 [set shape turtles "bug"]
-      ]
-      set id_id (id_id + 1)
-      set counter_now (counter_now + 1)
-    ]
-    set level_num_node (level_num_node * 2)
-    set current_level (current_level + 1)
-  ]
+  set-default-shape birds "airplane" ;;airplane to be changed
+  setup_birds
+  ;;set gene types
+  set gene_type1 ["AA" "Aa"] ;; AA * Aa
+  set gene_type2 ["AA" "aa" "Aa" "Aa"] ;;Aa * Aa
+  set gene_type3 ["Aa" "aa"] ;;Aa * aa
   reset-ticks
+end
+
+to go
+  show "before aging"
+  show unmated-list-bird
+  ask birds[
+    wiggle
+    remove_nobody
+    bird-mate
+    set age age + 1
+    check_mating_status ;;when age is appropriate, put into the mating list
+    set unmated-list-bird remove-duplicates unmated-list-bird
+    ;;eat seeds etc.
+    aging_death
+    ;;to remove the dead bird from mating list
+    remove_nobody
+    show "nobody removed"
+    show unmated-list-bird
+  ]
+
+  ;;show "after aging"
+  ;;foreach unmated-list-bird [n -> ask n[show age]]
+  tick
+end
+
+to remove_nobody
+  let temp_count 0
+  foreach unmated-list-bird [ n -> if n = nobody [set unmated-list-bird remove-item temp_count unmated-list-bird]
+    set temp_count temp_count + 1
+  ]
+end
+
+to check_mating_status
+  ifelse mated? [][
+    let temp (bird id)
+    if age >= (one-of [2 1]) [set unmated-list-bird lput temp unmated-list-bird]
+  ]
+ show "after checking mating"
+end
+
+
+to setup_birds
+  set counter 0
+  set unmated-list []
+  set unmated-list-bird []
+  create-birds 10 ;;to be changed to slider
+  [ setxy 0.7 * random-xcor 0.7 * random-ycor
+    set id counter
+    set age 0
+    set mated? false
+    set gene_type "Aa"
+    set health_data 5
+    set size 2
+    let temp bird counter
+    set counter counter + 1
+  ]
+end
+
+to aging_death
+  if age >= 4[
+    show "dying"
+    die
+  ]
+
+end
+
+to wiggle
+  rt random 50
+  lt random 50
+  fd 1
+end
+
+to bird-mate
+  ifelse mated? [show "mated"][;;what happened for unmated ones
+    if age >= (one-of [1 2])[
+      ifelse ((length unmated-list-bird) = 0) [show "no birds unmated"][
+        show unmated-list-bird
+        let temp_index random(length unmated-list-bird) ;;get a random index
+        let temp_bird item temp_index unmated-list-bird
+        show "flag"
+        show temp_bird
+        ask temp_bird [
+          set mated? true
+        ]
+        set unmated-list-bird remove-item temp_index unmated-list-bird
+        show "hatching"
+        set mated? true
+        hatch random(5)[
+          show "hatched"
+          setxy 0.7 * random-xcor 0.7 * random-ycor
+          set id counter
+          set age 0
+          set counter counter + 1
+          set mated? false
+          set health_data 5
+          set color yellow
+          ;;set gene_type ;;Aa AA aa
+          set size 2
+        ]
+      ]
+    ]
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -71,12 +161,12 @@ ticks
 30.0
 
 BUTTON
-82
-82
-148
-115
+77
+96
+143
+129
 NIL
-setup
+Setup
 NIL
 1
 T
@@ -87,27 +177,45 @@ NIL
 NIL
 1
 
-SLIDER
-23
-145
-195
-178
-Level
-Level
-1
-10
-4.0
-1
-1
+BUTTON
+78
+213
+141
+246
 NIL
-HORIZONTAL
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+699
+135
+899
+285
+how many birds
+time
+birds
+0.0
+100.0
+0.0
+1000.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot counter"
 
 @#$#@#$#@
 ## WHAT IS IT?
 
 (a general understanding of what the model is trying to show or explain)
-
-#Modification
 
 ## HOW IT WORKS
 
