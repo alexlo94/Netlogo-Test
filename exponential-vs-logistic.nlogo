@@ -7,9 +7,14 @@ birds-own [
   energy    ;; Energy of the birds, if this reaches 0 they die
 ]
 
+patches-own [
+  has_food?
+]
+
 globals [
   alive_num ;; The number of alive birds
   counter   ;; The overall population as opposed to alive_num
+  current_food ;; The amount of food currently on the map
 ]
 
 ;;
@@ -20,31 +25,55 @@ to Setup
   clear-all
   set-default-shape birds "airplane"
   setup_birds
+  setup_patches
   set alive_num 0
+  set current_food 0
   reset-ticks
 end
 
 to go
   ask birds [
-    get_older
+    get_older ;; interestingly enough, this is a measure of population control too
+    lose_energy ;; TODO: population control
     fly
+    eat
   ]
+
+  ask patches [
+    grow_food
+  ]
+
+  tick
 end
 
 ;; Procedure to setup the birds
 ;; Creates the initial population of birds on setup and sets their default variables
 to setup_birds
   set counter 0
+
   create-birds 10 ;; TODO: change this to a slider controlled variable later
   [
     setxy 0.7 * random-xcor 0.7 * random-ycor
     set id counter
     set age 0
     set mated? false
-    set energy 6  ;; initial energy value of 6
+    set energy bird_initial_energy
     set size 1
     set counter counter + 1
     set alive_num alive_num + 1
+  ]
+end
+
+;; Procedure to setup the patches
+;; Creates the initial distribution of food on the map based on the patches_food_chance global var
+to setup_patches
+  ask patches [
+    set has_food? false
+    if not has_food? and random-float 1 < patches_food_chance and current_food < maximum_food[
+      set pcolor magenta
+      set has_food? true
+      set current_food current_food + 1
+    ]
   ]
 end
 
@@ -52,13 +81,51 @@ end
 ;; BIRD PROCEDURES
 ;;
 to get_older
-  if age >= bird_max_age [die] ;; remember to die
+  if age >= bird_max_age [  ;; remember to die
+    die
+    set alive_num alive_num - 1
+  ]
+
   set age age + 1 ;; age a year
+end
+
+to lose_energy
+  if energy <= 0 [  ;; die if your energy reaches 0
+    die
+    set alive_num alive_num - 1
+  ]
+
+  if (ticks mod 100) = 0 [set energy energy - energy_decay] ;; lose a unit of energy
 end
 
 to fly
   if (ticks mod 20) = 0 [set heading random 360]
   fd 0.2
+end
+
+to eat
+  if not has_food? [stop]
+
+  set energy energy + patches_energy_value
+  set has_food? false
+  set pcolor black
+  set current_food current_food - 1
+  show energy
+end
+
+;;
+;; PATCH PROCEDURES
+;;
+
+to grow_food
+  if has_food? [stop]
+  if current_food >= maximum_food [stop]
+
+  if random-float 1 < patches_food_chance [
+    set pcolor magenta
+    set has_food? true
+    set current_food current_food + 1
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -82,8 +149,8 @@ GRAPHICS-WINDOW
 16
 -16
 16
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -163,6 +230,81 @@ bird_max_age
 100
 1
 ticks
+HORIZONTAL
+
+SLIDER
+269
+516
+441
+549
+bird_initial_energy
+bird_initial_energy
+1
+200
+200.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+528
+472
+705
+505
+patches_food_chance
+patches_food_chance
+0.01
+1
+0.01
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+528
+513
+707
+546
+maximum_food
+maximum_food
+1
+50
+10.0
+1
+1
+bites
+HORIZONTAL
+
+SLIDER
+527
+553
+704
+586
+patches_energy_value
+patches_energy_value
+1
+500
+1.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+269
+555
+441
+588
+energy_decay
+energy_decay
+1
+10
+10.0
+1
+1
+NIL
 HORIZONTAL
 
 @#$#@#$#@
