@@ -25,7 +25,9 @@ to Setup
 end
 
 to go
-  s
+  ask birds [
+    fly
+  ]
 end
 
 ;; Procedure to setup the birds
@@ -39,10 +41,18 @@ to setup_birds
     set age 0
     set mated? false
     set energy 6  ;; initial energy value of 6
-    set size 0.5
+    set size 1
     set counter counter + 1
     set alive_num alive_num + 1
   ]
+end
+
+;;
+;; BIRD PROCEDURES
+;;
+to fly
+  if (ticks mod ) = 0 [set heading random 360]
+  fd 0.2
 end
 @#$#@#$#@
 GRAPHICS-WINDOW

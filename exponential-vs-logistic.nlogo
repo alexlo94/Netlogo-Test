@@ -25,7 +25,9 @@ to Setup
 end
 
 to go
-  show "We hit go" ;;  TODO: replace this with go behavior
+  ask birds [
+    fly
+  ]
 end
 
 ;; Procedure to setup the birds
@@ -43,6 +45,14 @@ to setup_birds
     set counter counter + 1
     set alive_num alive_num + 1
   ]
+end
+
+;;
+;; BIRD PROCEDURES
+;;
+to fly
+  if (ticks mod 20) = 0 [set heading random 360]
+  fd 0.2
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
