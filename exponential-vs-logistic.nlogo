@@ -37,6 +37,7 @@ to go
     lose_energy ;; TODO: population control
     fly
     eat
+    mate
   ]
 
   ask patches [
@@ -51,12 +52,13 @@ end
 to setup_birds
   set counter 0
 
-  create-birds 10 ;; TODO: change this to a slider controlled variable later
+  create-birds initial_population ;; TODO: change this to a slider controlled variable later
   [
     setxy 0.7 * random-xcor 0.7 * random-ycor
     set id counter
     set age 0
     set mated? false
+    set color blue
     set energy bird_initial_energy
     set size 1
     set counter counter + 1
@@ -81,6 +83,8 @@ end
 ;; BIRD PROCEDURES
 ;;
 to get_older
+  if model = "exponential" [stop]
+
   if age >= bird_max_age [  ;; remember to die
     die
     set alive_num alive_num - 1
@@ -90,27 +94,60 @@ to get_older
 end
 
 to lose_energy
+  if model = "exponential" [stop]
+
   if energy <= 0 [  ;; die if your energy reaches 0
     die
     set alive_num alive_num - 1
   ]
 
-  if (ticks mod 100) = 0 [set energy energy - energy_decay] ;; lose a unit of energy
+  if (ticks mod 100) = 0 [set energy energy - energy_decay] ;; lose a unit of energy every 100 ticks
 end
 
 to fly
-  if (ticks mod 20) = 0 [set heading random 360]
+  if (ticks mod 20) = 0 [set heading random 360] ;; change direction every 20 ticks
   fd 0.2
 end
 
 to eat
+  if model = "exponential" [stop]
+
   if not has_food? [stop]
 
   set energy energy + patches_energy_value
   set has_food? false
   set pcolor black
   set current_food current_food - 1
-  show energy
+end
+
+to mate
+  if mated? [stop]
+  if not any? other birds-here [stop]
+
+  let target-mate one-of other birds-here
+
+  ask target-mate [
+    if mated? [stop]
+    hatch 1 [
+      setxy 0.7 * random-xcor 0.7 * random-ycor
+      set id counter
+      set age 0
+      set mated? false
+      set energy bird_initial_energy
+      set size 1
+      set counter counter + 1
+      set alive_num alive_num + 1
+    ]
+    set mated? true
+    set color pink
+
+    ask self [
+      set mated? true
+      set color pink
+      set counter counter + 1
+      set alive_num alive_num + 1
+    ]
+  ]
 end
 
 ;;
@@ -195,10 +232,10 @@ PLOT
 970
 263
 how many birds
-time
+ticks
 birds
 0.0
-100.0
+1000.0
 0.0
 1000.0
 true
@@ -212,10 +249,10 @@ CHOOSER
 34
 933
 79
-Model
-Model
-"Exponential Model" "Logistic Model"
-0
+model
+model
+"exponential" "logistic"
+1
 
 SLIDER
 269
@@ -224,10 +261,10 @@ SLIDER
 506
 bird_max_age
 bird_max_age
+10
 500
-5000
-5000.0
-100
+250.0
+10
 1
 ticks
 HORIZONTAL
@@ -271,7 +308,7 @@ maximum_food
 maximum_food
 1
 50
-10.0
+25.0
 1
 1
 bites
@@ -302,6 +339,21 @@ energy_decay
 1
 10
 10.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+96
+284
+268
+317
+initial_population
+initial_population
+10
+200
+92.0
 1
 1
 NIL
