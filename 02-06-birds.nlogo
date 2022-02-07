@@ -5,17 +5,14 @@ birds-own [
   age         ;;die at 4
   mated?      ;; True or False
   health_data
-  gene_type ;;Aa AA aa
 ]
 
 globals [
+  alive_num
   unmated-list
   unmated-list-bird
   counter ;;the overall population
   unmated_count
-  gene_type1
-  gene_type2
-  gene_type3
 ]
 ;;;
 ;;; SETUP PROCEDURES
@@ -25,9 +22,7 @@ to Setup
   set-default-shape birds "airplane" ;;airplane to be changed
   setup_birds
   ;;set gene types
-  set gene_type1 ["AA" "Aa"] ;; AA * Aa
-  set gene_type2 ["AA" "aa" "Aa" "Aa"] ;;Aa * Aa
-  set gene_type3 ["Aa" "aa"] ;;Aa * aa
+  set alive_num 0
   reset-ticks
 end
 
@@ -39,18 +34,16 @@ to go
     remove_nobody
     bird-mate
     set age age + 1
+    set health_data health_data - 1
     check_mating_status ;;when age is appropriate, put into the mating list
     set unmated-list-bird remove-duplicates unmated-list-bird
     ;;eat seeds etc.
     aging_death
-    ;;to remove the dead bird from mating list
-    remove_nobody
+
+    growth_control
     show "nobody removed"
     show unmated-list-bird
   ]
-
-  ;;show "after aging"
-  ;;foreach unmated-list-bird [n -> ask n[show age]]
   tick
 end
 
@@ -72,33 +65,36 @@ end
 
 to setup_birds
   set counter 0
-  set unmated-list []
   set unmated-list-bird []
   create-birds 10 ;;to be changed to slider
   [ setxy 0.7 * random-xcor 0.7 * random-ycor
     set id counter
     set age 0
     set mated? false
-    set gene_type "Aa"
-    set health_data 5
+    set health_data 6 ;;health_data is initialized to be 5
     set size 2
     let temp bird counter
     set counter counter + 1
+    set alive_num alive_num + 1
   ]
 end
 
+;; bird will die at the age of 4
 to aging_death
   if age >= 4[
     show "dying"
+    set alive_num alive_num - 1
     die
   ]
-
+  ;;for safety concerns
+  remove_nobody
+  remove_nobody
 end
 
 to wiggle
   rt random 50
   lt random 50
-  fd 1
+  fd 2
 end
 
 to bird-mate
@@ -123,21 +119,36 @@ to bird-mate
           set age 0
           set counter counter + 1
           set mated? false
-          set health_data 5
-          set color yellow
-          ;;set gene_type ;;Aa AA aa
+          set health_data 6
+          if Model = "Exponential Model" [set color yellow]
+          if Model = "Logistic Model" [set color red]
           set size 2
+          set alive_num alive_num + 1
         ]
       ]
     ]
   ]
 end
+
+;;filter out those whose health_data is 0 or negative
+to growth_control
+  ifelse Model = "Exponential Model" [][
+    ;;this growth control only happens under logistic mode
+    foreach unmated-list-bird [ n -> if health_data <= 0 [show "Deathhhh" die set alive_num alive_num - 1]
+    ]
+    ;;for safety concerns
+    remove_nobody
+    remove_nobody
+  ]
+end
+
+
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-647
-448
+270
+12
+707
+450
 -1
 -1
 13.0
@@ -161,10 +172,10 @@ ticks
 30.0
 
 BUTTON
-77
-96
-143
-129
+55
+46
+110
+79
 NIL
 Setup
 NIL
@@ -178,10 +189,10 @@ NIL
 1
 
 BUTTON
-78
-213
-141
-246
+54
+107
+109
+140
 NIL
 go
 T
@@ -195,10 +206,10 @@ NIL
 1
 
 PLOT
-699
-135
-899
-285
+770
+113
+970
+263
 how many birds
 time
 birds
@@ -210,7 +221,17 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot counter"
+"default" 1.0 0 -16777216 true "" "plot alive_num"
+
+CHOOSER
+771
+34
+933
+79
+Model
+Model
+"Exponential Model" "Logistic Model"
+0
 
 @#$#@#$#@
 ## WHAT IS IT?
