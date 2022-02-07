@@ -26,6 +26,7 @@ end
 
 to go
   ask birds [
+    get_older
     fly
   ]
 end
@@ -50,8 +51,13 @@ end
 ;;
 ;; BIRD PROCEDURES
 ;;
+to get_older
+  if age >= bird_max_age [die] ;; remember to die
+  set age age + 1 ;; age a year
+end
+
 to fly
-  if (ticks mod ) = 0 [set heading random 360]
+  if (ticks mod 20) = 0 [set heading random 360]
   fd 0.2
 end
 @#$#@#$#@
@@ -143,6 +149,21 @@ Model
 Model
 "Exponential Model" "Logistic Model"
 0
+
+SLIDER
+269
+473
+441
+506
+bird_max_age
+bird_max_age
+500
+5000
+500.0
+100
+1
+ticks
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
