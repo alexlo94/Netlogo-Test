@@ -8,6 +8,7 @@ birds-own [
 ]
 
 patches-own [
+  growth_area? ;;only certain areas can grow food, determined at setup
   has_food?
 ]
 
@@ -24,22 +25,26 @@ globals [
 to Setup
   clear-all
   set-default-shape birds "airplane"
+  set alive_num 0
   setup_birds
   setup_patches
-  set alive_num 0
   set current_food 0
+  ask patches [
+    setup_food_source
+  ]
   reset-ticks
 end
 
 to go
+  ;;if ticks = 0 [set alive_num initial_population]
   ask birds [
-    get_older ;; interestingly enough, this is a measure of population control too
-    lose_energy ;; TODO: population control
     fly
     eat
     mate
+    get_older ;; interestingly enough, this is a measure of population control too
+    lose_energy ;; TODO: population control
   ]
-
+  ;;show current_food ;;todo
   ask patches [
     grow_food
   ]
@@ -54,16 +59,18 @@ to setup_birds
 
   create-birds initial_population ;; TODO: change this to a slider controlled variable later
   [
-    setxy 0.7 * random-xcor 0.7 * random-ycor
+    setxy random-xcor random-ycor
     set id counter
     set age 0
     set mated? false
-    set color blue
+    set color green
     set energy bird_initial_energy
-    set size 1
+    set size 2
     set counter counter + 1
-    set alive_num alive_num + 1
   ]
+  set alive_num alive_num + initial_population
+
+  show alive_num
 end
 
 ;; Procedure to setup the patches
@@ -83,59 +90,66 @@ end
 ;; BIRD PROCEDURES
 ;;
 to get_older
-  if model = "exponential" [stop]
-
-  if age >= bird_max_age [  ;; remember to die
-    die
-    set alive_num alive_num - 1
-  ]
-
+  ;;if model = "exponential" [stop]
+  if self = nobody [stop]
   set age age + 1 ;; age a year
+  if age >= bird_max_age [  ;; remember to die
+    set alive_num alive_num - 1
+    die
+  ]
 end
 
 to lose_energy
   if model = "exponential" [stop]
-
+  if ticks mod 7 = 0 [set energy energy - energy_decay] ;; lose a unit of energy every 20 ticks
+  ;show "energy"
   if energy <= 0 [  ;; die if your energy reaches 0
-    die
-    set alive_num alive_num - 1
+    ;show "because"
+    ;;show "death"
+    ;;show alive_num
+    ;set alive_num alive_num - 1
+    ;die
   ]
-
-  if (ticks mod 100) = 0 [set energy energy - energy_decay] ;; lose a unit of energy every 100 ticks
 end
 
 to fly
   if (ticks mod 20) = 0 [set heading random 360] ;; change direction every 20 ticks
-  fd 0.2
+  fd 1
 end
 
 to eat
+  if model = "exponential" [stop]
 
   if not has_food? [stop]
 
   set energy energy + patches_energy_value
   set has_food? false
   set pcolor black
+  ;set size 2
+  ;show "eat"
   set current_food current_food - 1
 end
 
 to mate
   if mated? [stop]
+  if age <= one-of [15 20] [stop]
   if not any? other birds-here [stop]
-
   let target-mate one-of other birds-here
-
+  let mateddd 0
   ask target-mate [
     if mated? [stop]
-    hatch 1 [
-      setxy 0.7 * random-xcor 0.7 * random-ycor
+    let child_num random(4)
+    let child_num1 random(2)
+    ifelse energy > int(bird_initial_energy * 0.8) [set mateddd child_num] [set mateddd child_num1]
+    hatch mateddd [ ;; attention: when it goes below 3, the curve is weird
+      setxy  random-xcor random-ycor
       set id counter
       set age 0
       set mated? false
       set energy bird_initial_energy
-      set size 1
+      set size 2
       set counter counter + 1
-      set alive_num alive_num + 1
+      set color green
     ]
     set mated? true
     set color pink
@@ -144,20 +158,31 @@ to mate
       set mated? true
       set color pink
       set counter counter + 1
-      set alive_num alive_num + 1
     ]
   ]
+  set alive_num (alive_num + mateddd)
 end
 
 ;;
 ;; PATCH PROCEDURES
 ;;
+to setup_food_source
+  if model = "exponential" [stop]
+  ;;if random-float 1 < patches_food_chance [
+    if current_food >= maximum_food [stop]
+    set pcolor magenta
+    set growth_area? true
+    set has_food? true
+    set current_food current_food + 1
+  ;;]
+end
 
 to grow_food
+  if not (ticks mod 7 = 0) [stop]
+  if model = "exponential" [stop]
   if has_food? [stop]
   if current_food >= maximum_food [stop]
-
-  if random-float 1 < patches_food_chance [
+  if growth_area? = true[
     set pcolor magenta
     set has_food? true
     set current_food current_food + 1
@@ -192,10 +217,10 @@ ticks
 30.0
 
 BUTTON
-55
-46
-110
-79
+15
+25
+120
+58
 NIL
 Setup
 NIL
@@ -209,10 +234,10 @@ NIL
 1
 
 BUTTON
-54
-107
-109
-140
+14
+75
+120
+108
 NIL
 go
 T
@@ -226,15 +251,15 @@ NIL
 1
 
 PLOT
-770
-113
-970
-263
+13
+239
+213
+389
 how many birds
 ticks
 birds
 0.0
-1000.0
+100.0
 0.0
 1000.0
 true
@@ -244,14 +269,14 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot alive_num"
 
 CHOOSER
-771
-34
-933
-79
+12
+168
+185
+213
 model
 model
 "exponential" "logistic"
-0
+1
 
 SLIDER
 269
@@ -262,7 +287,7 @@ bird_max_age
 bird_max_age
 10
 500
-250.0
+60.0
 10
 1
 ticks
@@ -277,52 +302,52 @@ bird_initial_energy
 bird_initial_energy
 1
 200
-200.0
+82.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-528
-472
-705
-505
-patches_food_chance
-patches_food_chance
-0.01
-1
-0.01
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-528
-513
+515
+471
 707
-546
+504
+patches_food_chance
+patches_food_chance
+0.01
+1
+0.42
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+515
+512
+707
+545
 maximum_food
 maximum_food
 1
-50
-10.0
-1
+100
+99.0
+2
 1
 bites
 HORIZONTAL
 
 SLIDER
-527
-553
-704
-586
+514
+556
+707
+589
 patches_energy_value
 patches_energy_value
 1
-500
-1.0
+10
+7.0
 1
 1
 NIL
@@ -337,22 +362,22 @@ energy_decay
 energy_decay
 1
 10
-10.0
+8.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-96
-284
-268
-317
+13
+121
+185
+154
 initial_population
 initial_population
 10
 200
-91.0
+92.0
 1
 1
 NIL
@@ -361,39 +386,52 @@ HORIZONTAL
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+This model showcases two population growth models: the exponential and the logistic model. The exponential model shows how a population grows when it has unlimited resources and no relevant constraints while the logistic model shows how a population growth is affected by resource constraints.
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+The microworld is populated by birds (a breed of turtles) that fly randomly over a grid of patches (the map). As the birds fly around the map they have a chance of making contact with eachother and if certain conditions are met, they will mate, producing exactly one offspring.
+The birds are colored either blue or pink, indicating whether they have mated before. If a bird's color is pink, then it has mated before and if it hasn't, it's colored green. A collision between two green birds will result in them mating successfully. A successful mating will produce a green offspring and turn the parents pink.
+When exploring the exponential model, the birds are free to fly around indefinitely, without any constraints, searching for an eligible mate. However, under the logistic model, the birds are subject to constraints that will affect the growth rate of the population. More specifically, under the logistic model, the birds will:
+  - Age every few ticks and die once they've reached a maximum age set by the user.
+  - Lose energy every few ticks and die if their energy reaches 0
+To replenish their energy, the birds need to fly over a patch that has food, which is colored magenta, and eat it. When the food from a patch is eaten, its color reverts to black.
+The map can only have a limited amount of food at any given time and if the current amount of food available on the map is less than the maximum, every patch has a chance to grow some food.
 
 ## HOW TO USE IT
 
-(how to use the model, including a description of each of the items in the Interface tab)
+Use the drop-down menu to the right of the canvas to select which model you would like to explore and then hit the setup and go buttons to start the simulation.
+Before doing so, you may play around with the initial population size, the lifespan of the birds, and other relevant parameters to the model to see how they affect the growth of the population. Note that variables that have to do with the birds' age, energy and the food availability of the map are only relevant when exploring the logistic model.
 
 ## THINGS TO NOTICE
 
-(suggested things for the user to notice while running the model)
+Notice the plot of the current number of birds in the population which is shown on the left of the canvas. How does switching from one model to the other affect the shape of the curve? Also, observe how different variables affect the slope of the curve under any given model, as well as whether they result in a sustainable population size (i.e. whether the birds die out or not).
 
 ## THINGS TO TRY
 
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
+Try playing around with the initial population size, the lifespan of the birds, and the other relevant parameters to the model to see how they affect the growth rate of the population.
 
 ## EXTENDING THE MODEL
 
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+The method of mating has been chosen arbitrarily to require the birds to make contact in order to mate. Try imposing different mating conditions to see how this affects the population growth rate. Could the birds reproduce without a partner? From a distance? Randomly perhaps?
+A logical next step when exploring population constraints would be the addition of a predator population (as in the wolf-sheep model). How do you think that would affect the population?
+Currently, the map size and shape are set to the default values of a NETLOGO model. That is, the map is a wrapping rectangle (a torus). How would changing the topology of the simulation affect the population?
 
 ## NETLOGO FEATURES
 
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
+Note the use of the other and breed-here keywords used in combination to create the `mate` procedure.
 
 ## RELATED MODELS
 
-(models in the NetLogo Models Library and elsewhere which are of related interest)
+Wolf-Sheep model: 
 
 ## CREDITS AND REFERENCES
 
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+Credit to:
+Meixuan Sun, meixuansun2022@u.northwestern.edu
+Alexandros Lotsos, alexandroslotsos2026@u.northwestern.edu
+Reference:
+https://www.khanacademy.org/science/ap-biology/ecology-ap/population-ecology-ap/a/exponential-logistic-growth
 @#$#@#$#@
 default
 true

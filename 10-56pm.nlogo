@@ -63,14 +63,12 @@ to setup_birds
     set id counter
     set age 0
     set mated? false
-    set color blue
+    set color green
     set energy bird_initial_energy
     set size 2
     set counter counter + 1
   ]
   set alive_num alive_num + initial_population
-  show "Initial"
-  show alive_num
 end
 
 ;; Procedure to setup the patches
@@ -217,10 +215,10 @@ ticks
 30.0
 
 BUTTON
-55
-46
-110
-79
+15
+25
+120
+58
 NIL
 Setup
 NIL
@@ -234,10 +232,10 @@ NIL
 1
 
 BUTTON
-54
-107
-109
-140
+14
+75
+120
+108
 NIL
 go
 T
@@ -251,10 +249,10 @@ NIL
 1
 
 PLOT
-770
-113
-970
-263
+13
+239
+213
+389
 how many birds
 ticks
 birds
@@ -269,10 +267,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot alive_num"
 
 CHOOSER
-771
-34
-933
-79
+12
+168
+185
+213
 model
 model
 "exponential" "logistic"
@@ -309,10 +307,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-528
-472
-705
-505
+515
+471
+707
+504
 patches_food_chance
 patches_food_chance
 0.01
@@ -324,10 +322,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-528
-513
-720
-546
+515
+512
+707
+545
 maximum_food
 maximum_food
 1
@@ -339,10 +337,10 @@ bites
 HORIZONTAL
 
 SLIDER
-527
-553
-704
-586
+514
+556
+707
+589
 patches_energy_value
 patches_energy_value
 1
@@ -369,10 +367,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-96
-284
-268
-317
+13
+121
+185
+154
 initial_population
 initial_population
 10
@@ -386,39 +384,52 @@ HORIZONTAL
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+This model showcases two population growth models: the exponential and the logistic model. The exponential model shows how a population grows when it has unlimited resources and no relevant constraints while the logistic model shows how a population growth is affected by resource constraints.
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+The microworld is populated by birds (a breed of turtles) that fly randomly over a grid of patches (the map). As the birds fly around the map they have a chance of making contact with eachother and if certain conditions are met, they will mate, producing exactly one offspring.
+The birds are colored either blue or pink, indicating whether they have mated before. If a bird's color is pink, then it has mated before and if it hasn't, it's colored green. A collision between two green birds will result in them mating successfully. A successful mating will produce a green offspring and turn the parents pink.
+When exploring the exponential model, the birds are free to fly around indefinitely, without any constraints, searching for an eligible mate. However, under the logistic model, the birds are subject to constraints that will affect the growth rate of the population. More specifically, under the logistic model, the birds will:
+  - Age every few ticks and die once they've reached a maximum age set by the user.
+  - Lose energy every few ticks and die if their energy reaches 0
+To replenish their energy, the birds need to fly over a patch that has food, which is colored magenta, and eat it. When the food from a patch is eaten, its color reverts to black.
+The map can only have a limited amount of food at any given time and if the current amount of food available on the map is less than the maximum, every patch has a chance to grow some food.
 
 ## HOW TO USE IT
 
-(how to use the model, including a description of each of the items in the Interface tab)
+Use the drop-down menu to the right of the canvas to select which model you would like to explore and then hit the setup and go buttons to start the simulation.
+Before doing so, you may play around with the initial population size, the lifespan of the birds, and other relevant parameters to the model to see how they affect the growth of the population. Note that variables that have to do with the birds' age, energy and the food availability of the map are only relevant when exploring the logistic model.
 
 ## THINGS TO NOTICE
 
-(suggested things for the user to notice while running the model)
+Notice the plot of the current number of birds in the population which is shown on the left of the canvas. How does switching from one model to the other affect the shape of the curve? Also, observe how different variables affect the slope of the curve under any given model, as well as whether they result in a sustainable population size (i.e. whether the birds die out or not).
 
 ## THINGS TO TRY
 
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
+Try playing around with the initial population size, the lifespan of the birds, and the other relevant parameters to the model to see how they affect the growth rate of the population.
 
 ## EXTENDING THE MODEL
 
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+The method of mating has been chosen arbitrarily to require the birds to make contact in order to mate. Try imposing different mating conditions to see how this affects the population growth rate. Could the birds reproduce without a partner? From a distance? Randomly perhaps?
+A logical next step when exploring population constraints would be the addition of a predator population (as in the wolf-sheep model). How do you think that would affect the population?
+Currently, the map size and shape are set to the default values of a NETLOGO model. That is, the map is a wrapping rectangle (a torus). How would changing the topology of the simulation affect the population?
 
 ## NETLOGO FEATURES
 
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
+Note the use of the other and breed-here keywords used in combination to create the `mate` procedure.
 
 ## RELATED MODELS
 
-(models in the NetLogo Models Library and elsewhere which are of related interest)
+Wolf-Sheep model: 
 
 ## CREDITS AND REFERENCES
 
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+Credit to:
+Meixuan Sun, meixuansun2022@u.northwestern.edu
+Alexandros Lotsos, alexandroslotsos2026@u.northwestern.edu
+Reference:
+https://www.khanacademy.org/science/ap-biology/ecology-ap/population-ecology-ap/a/exponential-logistic-growth
 @#$#@#$#@
 default
 true
